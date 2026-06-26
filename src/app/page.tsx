@@ -89,14 +89,38 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen px-5 py-8 text-stone-950 sm:px-8 lg:px-10">
-      <div className="mx-auto flex max-w-7xl flex-col gap-8">
-        <header className="flex flex-col gap-6 rounded-[2.5rem] border border-white/70 bg-white/50 p-6 shadow-2xl shadow-stone-900/10 backdrop-blur md:p-10">
-          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-stone-200 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-stone-500">
+    <main className="relative min-h-screen overflow-hidden px-4 pb-8 pt-24 text-stone-950 sm:px-8 lg:px-10 lg:pt-10">
+      <div className="pointer-events-none absolute left-[-10rem] top-28 h-80 w-80 rounded-full bg-amber-300/20 blur-3xl" />
+      <div className="pointer-events-none absolute right-[-12rem] top-10 h-96 w-96 rounded-full bg-stone-300/30 blur-3xl" />
+
+      <div className="fixed inset-x-3 top-3 z-50 rounded-[1.6rem] border border-white/70 bg-stone-950/[0.92] p-3 text-white shadow-[0_20px_60px_rgba(31,26,23,0.38)] backdrop-blur-xl lg:hidden">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-300">
+              Cena końcowa
+            </p>
+            <p className="mt-1 text-2xl font-semibold tracking-tight">
+              {formatCurrency(offer.finalPrice)}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-white/10 px-3 py-2 text-right">
+            <p className="text-[11px] text-stone-300">Zakresy</p>
+            <p className="text-sm font-semibold">
+              {offer.selectedProjects.length || 0}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative mx-auto flex max-w-7xl flex-col gap-8">
+        <header className="relative overflow-hidden rounded-[2.8rem] border border-white/70 bg-white/[0.55] p-6 shadow-[0_35px_100px_rgba(68,50,35,0.18)] backdrop-blur-xl md:p-10">
+          <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-amber-200/50 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 right-10 h-36 w-36 rounded-full bg-white/70 blur-2xl" />
+          <div className="relative inline-flex w-fit items-center gap-2 rounded-full border border-white/80 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-stone-500 shadow-lg shadow-stone-900/5">
             <Sparkles className="h-4 w-4 text-amber-700" aria-hidden="true" />
             Interior offer calculator
           </div>
-          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
+          <div className="relative mt-6 grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
             <div className="space-y-4">
               <h1 className="max-w-3xl font-[var(--font-playfair)] text-5xl font-semibold leading-[0.95] tracking-tight text-stone-950 md:text-7xl">
                 Wycena projektu wnętrz w kilka chwil.
@@ -105,12 +129,23 @@ export default function HomePage() {
                 Minimalistyczny kalkulator premium z podglądem ceny, rabatem,
                 rozbiciem na raty i gotową ofertą PDF dla klienta.
               </p>
+              <div className="flex flex-wrap gap-3 pt-2 text-sm text-stone-600">
+                <span className="rounded-full border border-white/80 bg-white/[0.65] px-4 py-2 shadow-sm">
+                  PDF po stronie klienta
+                </span>
+                <span className="rounded-full border border-white/80 bg-white/[0.65] px-4 py-2 shadow-sm">
+                  Live pricing
+                </span>
+                <span className="rounded-full border border-white/80 bg-white/[0.65] px-4 py-2 shadow-sm">
+                  Responsywny UX
+                </span>
+              </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               {PROJECT_PRICING.map((project) => (
                 <div
                   key={project.id}
-                  className="rounded-3xl border border-stone-200 bg-white/70 p-5 shadow-sm"
+                  className="group rounded-[1.8rem] border border-white/80 bg-white/70 p-5 shadow-[0_18px_45px_rgba(68,50,35,0.12)] transition duration-200 hover:-translate-y-1 hover:bg-white"
                 >
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">
                     {project.shortName}
@@ -126,10 +161,11 @@ export default function HomePage() {
         </header>
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
-          <Card className="p-6 md:p-8">
+          <Card className="relative overflow-hidden p-6 md:p-8">
+            <div className="pointer-events-none absolute right-8 top-8 h-40 w-40 rounded-full bg-amber-100/70 blur-3xl" />
             <CardHeader>
-              <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-stone-950 text-white">
+              <div className="relative flex items-center gap-3">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-stone-950 to-amber-950 text-white shadow-lg shadow-stone-900/20">
                   <Calculator className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div>
@@ -141,7 +177,7 @@ export default function HomePage() {
               </div>
             </CardHeader>
 
-            <form className="mt-8 space-y-9">
+            <form className="relative mt-8 space-y-9">
               <section className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2 md:col-span-3">
                   <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-stone-400">
@@ -194,7 +230,7 @@ export default function HomePage() {
                     return (
                       <div
                         key={project.id}
-                        className="grid gap-4 rounded-3xl border border-stone-200 bg-white/55 p-5 md:grid-cols-[1fr_190px]"
+                        className="grid gap-4 rounded-[1.8rem] border border-white/80 bg-white/[0.62] p-5 shadow-[0_14px_35px_rgba(68,50,35,0.08)] transition duration-200 hover:-translate-y-0.5 hover:bg-white/[0.85] md:grid-cols-[1fr_190px]"
                       >
                         <div className="space-y-1">
                           <Label htmlFor={project.id}>{project.name}</Label>
@@ -226,7 +262,7 @@ export default function HomePage() {
                 </div>
               </section>
 
-              <section className="grid gap-4 md:grid-cols-[1fr_190px] md:items-start">
+              <section className="grid gap-4 rounded-[1.8rem] border border-white/80 bg-gradient-to-br from-white/75 to-amber-50/70 p-5 shadow-[0_14px_35px_rgba(68,50,35,0.08)] md:grid-cols-[1fr_190px] md:items-start">
                 <div>
                   <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-stone-400">
                     Rabat
@@ -255,7 +291,7 @@ export default function HomePage() {
                 </div>
               </section>
 
-              <label className="flex cursor-pointer gap-3 rounded-3xl border border-stone-200 bg-white/60 p-5 text-sm leading-6 text-stone-600">
+              <label className="flex cursor-pointer gap-3 rounded-[1.8rem] border border-white/80 bg-white/70 p-5 text-sm leading-6 text-stone-600 shadow-[0_14px_35px_rgba(68,50,35,0.08)] transition hover:bg-white/90">
                 <input
                   className="mt-1 h-5 w-5 rounded border-stone-300 accent-stone-950"
                   checked={consent}
@@ -271,22 +307,24 @@ export default function HomePage() {
           </Card>
 
           <aside className="lg:sticky lg:top-8 lg:self-start">
-            <Card className="overflow-hidden">
-              <div className="bg-stone-950 p-7 text-white md:p-8">
+            <Card className="overflow-hidden border-stone-950/10">
+              <div className="relative overflow-hidden bg-gradient-to-br from-stone-950 via-stone-900 to-amber-950 p-7 text-white md:p-8">
+                <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-amber-300/20 blur-3xl" />
+                <div className="pointer-events-none absolute bottom-0 left-10 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
                 <div className="flex items-center justify-between gap-4">
-                  <div>
+                  <div className="relative">
                     <p className="text-sm text-stone-300">Cena po rabacie</p>
                     <p className="mt-2 text-4xl font-semibold tracking-tight">
                       {formatCurrency(offer.finalPrice)}
                     </p>
                   </div>
-                  <span className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white/10">
+                  <span className="relative flex h-14 w-14 items-center justify-center rounded-3xl bg-white/10 shadow-inner shadow-white/10">
                     <Home className="h-6 w-6" aria-hidden="true" />
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-7 p-6 md:p-8">
+              <div className="space-y-7 bg-white/[0.72] p-6 md:p-8">
                 <div className="grid grid-cols-3 gap-3">
                   <SummaryTile label="Cena bazowa" value={formatCurrency(offer.basePrice)} />
                   <SummaryTile
@@ -304,7 +342,7 @@ export default function HomePage() {
                     {offer.selectedProjects.map((project) => (
                       <div
                         key={project.id}
-                        className="rounded-3xl border border-stone-200 bg-stone-50/80 p-5"
+                        className="rounded-[1.8rem] border border-white/80 bg-gradient-to-br from-white to-stone-50/80 p-5 shadow-[0_16px_38px_rgba(68,50,35,0.09)]"
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div>
@@ -332,7 +370,7 @@ export default function HomePage() {
                 )}
 
                 {offer.selectedProjects.length > 1 ? (
-                  <div className="rounded-3xl bg-stone-950 p-5 text-white">
+                  <div className="rounded-[1.8rem] bg-gradient-to-br from-stone-950 to-amber-950 p-5 text-white shadow-[0_20px_45px_rgba(31,26,23,0.22)]">
                     <div className="mb-4 flex items-center gap-2">
                       <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
                       <h3 className="font-semibold">Podsumowanie łączne rat</h3>
@@ -396,7 +434,7 @@ function Field({
 
 function SummaryTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-3xl border border-stone-200 bg-white/60 p-4">
+    <div className="rounded-[1.55rem] border border-white/80 bg-white/75 p-4 shadow-[0_12px_28px_rgba(68,50,35,0.08)]">
       <p className="text-xs text-stone-500">{label}</p>
       <p className="mt-2 text-sm font-semibold text-stone-950 sm:text-base">
         {value}
@@ -415,7 +453,7 @@ function InstallmentList({
       {installments.map((installment) => (
         <div
           key={installment.label}
-          className="flex items-center justify-between gap-3 text-sm"
+          className="flex items-center justify-between gap-3 rounded-2xl bg-white/60 px-3 py-2 text-sm"
         >
           <span className="text-stone-500">
             {installment.label} · {formatPercent(installment.percent)}%
