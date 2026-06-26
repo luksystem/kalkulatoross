@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState, type ReactNode } from "react";
-import { Calculator, CheckCircle2, Home, Sparkles } from "lucide-react";
+import { Calculator, CheckCircle2, Home } from "lucide-react";
 import { OfferPdfButton } from "@/components/offer-pdf-button";
 import {
   Card,
@@ -32,6 +33,106 @@ const parseInputNumber = (value: string) => {
 const hasInvalidNumber = (value: string) =>
   value.trim() !== "" && Number.isNaN(parseInputNumber(value));
 
+const getDiscountPercentFromCode = (code: string) => {
+  const normalizedCode = code.trim().toLowerCase();
+
+  if (!normalizedCode) {
+    return 0;
+  }
+
+  const match = /^rabat(\d{1,3})$/.exec(normalizedCode);
+
+  if (!match) {
+    return 0;
+  }
+
+  return clampNumber(Number(match[1]), 0, 100);
+};
+
+const isValidDiscountCode = (code: string) => {
+  const normalizedCode = code.trim().toLowerCase();
+
+  if (!normalizedCode) {
+    return true;
+  }
+
+  const match = /^rabat(\d{1,3})$/.exec(normalizedCode);
+
+  return Boolean(match && Number(match[1]) <= 100);
+};
+
+const PROJECT_DESCRIPTIONS = [
+  {
+    title: "Projekt TECHNICZNY",
+    price: "120 zł / 1 m²",
+    description:
+      "To projekt bez wizualizacji, stanowiący bazę dla wszystkich innych opracowań. Skupia się na kluczowych informacjach technicznych i instalacyjnych: układzie funkcjonalnym oraz instalacjach. Idealny, gdy wizualizacje są odłożone w czasie lub nie są planowane. Można go rozwijać do kolejnych pakietów. Obejmuje 3 spotkania w studio.",
+  },
+  {
+    title: "Projekt KONCEPCYJNY",
+    price: "230 zł / 1 m² + zakres techniczny",
+    description:
+      "Idealny, gdy masz jasną wizję lub szukasz rozwiązania do inwestycji, na przykład mieszkania na wynajem. Zawiera jeden komplet wizualizacji bez korekt, dobór materiałów w formie notatki oraz łącznie 4 spotkania. Wymaga precyzyjnych wytycznych i inspiracji od klienta. Każdy projekt koncepcyjny można rozszerzyć do pełnego.",
+  },
+  {
+    title: "Projekt PEŁNY",
+    price: "390 zł / 1 m² + zakres techniczny",
+    description:
+      "Kompleksowe i najbardziej spersonalizowane rozwiązanie. Oferuje wizualizacje z dwiema korektami, wyczerpujące rysunki wykonawcze mebli i ścian, opisy ułatwiające wycenę oraz łącznie 7 spotkań. To najlepszy wybór, gdy wnętrze ma być unikalne, dopracowane i w pełni zindywidualizowane.",
+  },
+];
+
+const WORKFLOW_STAGES = [
+  {
+    title: "ETAP 1: Pierwszy kontakt i oferta",
+    items: [
+      "Spotkanie prezentujące ofertę.",
+      "Omówienie przebiegu i zakresu pracy.",
+      "Wypełnienie ankiety klienta, akceptacja oferty i umowy.",
+      "Rozliczenie pierwszej raty projektu.",
+    ],
+  },
+  {
+    title: "ETAP 2: Układ Funkcjonalny - Fundament Projektu",
+    items: [
+      "Spotkanie na inwestycji podczas inwentaryzacji lub analiza materiałów.",
+      "Rozpoczęcie pracy nad układem funkcji.",
+      "Spotkanie prezentujące układ funkcjonalny, możliwe online.",
+      "Omówienie korekt, akceptacja układu funkcji i rozliczenie drugiej raty.",
+      "Rozpoczęcie opracowania technicznego i możliwość startu prac wykonawczych.",
+    ],
+  },
+  {
+    title: "ETAP 3: Szczegóły Techniczne",
+    items: [
+      "Spotkanie prezentujące opracowanie techniczne, możliwe online.",
+      "Przygotowanie do wizualizacji i omówienie stylistyki.",
+      "Rozliczenie trzeciej raty projektu.",
+      "Rozpoczęcie pracy nad aranżacją i wizualizacjami.",
+      "Kontynuacja prac wykonawczych na budowie możliwa również na tym etapie.",
+    ],
+  },
+  {
+    title: "ETAP 4: Wizualizacje i Materiały",
+    items: [
+      "Spotkanie prezentujące komplet wizualizacji, zalecane w studio ze względu na próbki materiałów.",
+      "Omówienie zmian, korekt i propozycji materiałów.",
+      "Rozliczenie czwartej raty projektu.",
+      "Dla projektu koncepcyjnego: zakończenie pracy projektowej.",
+      "Dla projektu pełnego: przygotowanie zmian wizualizacji i kolejne spotkania korekt.",
+    ],
+  },
+  {
+    title: "ETAP 5: Opracowanie Wykonawcze i Finalizacja",
+    items: [
+      "Przygotowanie opracowania wykonawczego wraz z aktualizacją opracowania technicznego.",
+      "Spotkanie prezentujące komplet projektu.",
+      "Omówienie projektu, prac wykonawczych, ofert zakupowych oraz usług dodatkowych.",
+      "Rozliczenie piątej raty projektu.",
+    ],
+  },
+];
+
 export default function HomePage() {
   const [client, setClient] = useState<ClientData>({
     name: "",
@@ -44,7 +145,7 @@ export default function HomePage() {
     concept: "",
     technical: "",
   });
-  const [discountInput, setDiscountInput] = useState("");
+  const [discountCode, setDiscountCode] = useState("");
 
   const meters = useMemo<ProjectMeters>(() => {
     return PROJECT_PRICING.reduce<ProjectMeters>(
@@ -57,8 +158,7 @@ export default function HomePage() {
     );
   }, [meterInputs]);
 
-  const discountValue = parseInputNumber(discountInput);
-  const discountPercent = clampNumber(discountValue, 0, 100);
+  const discountPercent = getDiscountPercentFromCode(discountCode);
   const offer = useMemo(
     () => calculateOffer(meters, discountPercent),
     [meters, discountPercent],
@@ -68,8 +168,7 @@ export default function HomePage() {
     const value = parseInputNumber(meterInputs[project.id]);
     return hasInvalidNumber(meterInputs[project.id]) || value < 0;
   });
-  const invalidDiscount =
-    hasInvalidNumber(discountInput) || discountValue < 0 || discountValue > 100;
+  const invalidDiscount = !isValidDiscountCode(discountCode);
   const validEmail = isValidEmail(client.email);
   const hasRequiredClientData =
     client.name.trim() !== "" && validEmail && client.phone.trim() !== "";
@@ -116,9 +215,14 @@ export default function HomePage() {
         <header className="relative overflow-hidden rounded-[2.8rem] border border-white/10 bg-zinc-950/[0.72] p-6 shadow-[0_35px_110px_rgba(0,0,0,0.48)] backdrop-blur-xl md:p-10">
           <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-amber-500/18 blur-3xl" />
           <div className="pointer-events-none absolute bottom-0 right-10 h-36 w-36 rounded-full bg-emerald-400/10 blur-2xl" />
-          <div className="relative inline-flex w-fit items-center gap-2 rounded-full border border-amber-200/20 bg-white/[0.06] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-amber-100 shadow-lg shadow-black/20">
-            <Sparkles className="h-4 w-4 text-amber-300" aria-hidden="true" />
-            Interior offer calculator
+          <div className="relative flex justify-end">
+            <Image
+              src="/ossgaleria-logo.jpg"
+              alt="Ossgaleria"
+              width={180}
+              height={72}
+              className="h-12 w-auto rounded-xl opacity-70 mix-blend-screen grayscale contrast-125"
+            />
           </div>
           <div className="relative mt-6 grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
             <div className="space-y-4">
@@ -129,19 +233,8 @@ export default function HomePage() {
                 Minimalistyczny kalkulator premium z podglądem ceny, rabatem,
                 rozbiciem na raty i gotową ofertą PDF dla klienta.
               </p>
-              <div className="flex flex-wrap gap-3 pt-2 text-sm text-stone-300">
-                <span className="rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 shadow-sm">
-                  PDF po stronie klienta
-                </span>
-                <span className="rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 shadow-sm">
-                  Live pricing
-                </span>
-                <span className="rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 shadow-sm">
-                  Responsywny UX
-                </span>
-              </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="hidden gap-3 sm:grid sm:grid-cols-3">
               {PROJECT_PRICING.map((project) => (
                 <div
                   key={project.id}
@@ -265,27 +358,24 @@ export default function HomePage() {
               <section className="grid gap-4 rounded-[1.8rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-emerald-400/[0.08] p-5 shadow-[0_14px_35px_rgba(0,0,0,0.24)] md:grid-cols-[1fr_190px] md:items-start">
                 <div>
                   <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-100/70">
-                    Rabat
+                    Kod rabatowy
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-stone-400">
-                    Rabat procentowy jest naliczany proporcjonalnie do każdego
-                    wybranego typu projektu.
+                    Wpisz kod w formacie rabat10, rabat20 itd. Liczba w kodzie
+                    oznacza procent rabatu.
                   </p>
                 </div>
                 <div className="space-y-2">
                   <Input
-                    min={0}
-                    max={100}
-                    inputMode="decimal"
-                    placeholder="0"
-                    type="number"
-                    value={discountInput}
-                    onChange={(event) => setDiscountInput(event.target.value)}
-                    aria-label="Rabat procentowy"
+                    autoCapitalize="none"
+                    placeholder="rabat10"
+                    value={discountCode}
+                    onChange={(event) => setDiscountCode(event.target.value)}
+                    aria-label="Kod rabatowy"
                   />
                   {invalidDiscount ? (
                     <p className="text-xs text-red-300">
-                      Rabat musi być w zakresie od 0 do 100%.
+                      Kod musi mieć format rabat10, rabat20 itd. Maksymalnie 100%.
                     </p>
                   ) : null}
                 </div>
@@ -328,8 +418,14 @@ export default function HomePage() {
                 <div className="grid grid-cols-3 gap-3">
                   <SummaryTile label="Cena bazowa" value={formatCurrency(offer.basePrice)} />
                   <SummaryTile
-                    label="Rabat"
-                    value={`${formatPercent(offer.discountPercent)}%`}
+                    label="Kod rabatowy"
+                    value={
+                      discountCode.trim()
+                        ? `${discountCode.trim().toLowerCase()} · ${formatPercent(
+                            offer.discountPercent,
+                          )}%`
+                        : "brak"
+                    }
                   />
                   <SummaryTile
                     label="Oszczędzasz"
@@ -396,6 +492,7 @@ export default function HomePage() {
                 <div className="space-y-3">
                   <OfferPdfButton
                     client={client}
+                    discountCode={discountCode}
                     disabled={isPdfDisabled}
                     offer={offer}
                   />
@@ -410,8 +507,105 @@ export default function HomePage() {
             </Card>
           </aside>
         </div>
+
+        <InfoSections />
       </div>
     </main>
+  );
+}
+
+function InfoSections() {
+  return (
+    <section className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+      <Card className="p-6 md:p-8">
+        <CardHeader>
+          <CardTitle>Zakres opracowań</CardTitle>
+          <CardDescription>
+            Szczegóły pakietów są ukryte pod spodem, żeby kalkulacja pozostała
+            najważniejsza.
+          </CardDescription>
+        </CardHeader>
+        <div className="mt-6 space-y-3">
+          {PROJECT_DESCRIPTIONS.map((project) => (
+            <details
+              key={project.title}
+              className="group rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-5"
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
+                <span>
+                  <span className="block font-semibold text-stone-50">
+                    {project.title}
+                  </span>
+                  <span className="mt-1 block text-sm text-amber-100/70">
+                    {project.price}
+                  </span>
+                </span>
+                <span className="text-sm text-stone-400 transition group-open:rotate-45">
+                  +
+                </span>
+              </summary>
+              <p className="mt-4 text-sm leading-7 text-stone-300">
+                {project.description}
+              </p>
+            </details>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="p-6 md:p-8">
+        <CardHeader>
+          <CardTitle>Harmonogram pracy</CardTitle>
+          <CardDescription>
+            Kluczowe etapy współpracy od pierwszego kontaktu po przekazanie
+            gotowego projektu.
+          </CardDescription>
+        </CardHeader>
+        <div className="mt-6 space-y-3">
+          {WORKFLOW_STAGES.map((stage) => (
+            <details
+              key={stage.title}
+              className="group rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-5"
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-stone-50">
+                {stage.title}
+                <span className="text-sm text-stone-400 transition group-open:rotate-45">
+                  +
+                </span>
+              </summary>
+              <ul className="mt-4 space-y-2 text-sm leading-6 text-stone-300">
+                {stage.items.map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-300" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="p-6 md:col-span-2 md:p-8">
+        <details>
+          <summary className="cursor-pointer list-none font-semibold text-stone-50">
+            Jak liczyć metraż w praktyce?
+          </summary>
+          <div className="mt-4 grid gap-4 text-sm leading-7 text-stone-300 lg:grid-cols-2">
+            <p>
+              Jeśli chcesz zaprojektować wnętrze domu o powierzchni 200 m², z
+              czego 40 m² zajmują garaż i kotłownia, do kalkulacji możesz
+              przyjąć 160 m², ponieważ garaż i pomieszczenia techniczne zwykle
+              są opracowywane gratis.
+            </p>
+            <p>
+              Pozostałe 160 m² można podzielić na przykład na 100 m² projektu
+              pełnego oraz 60 m² projektu technicznego. Opracowanie techniczne
+              lub koncepcyjne można w późniejszym czasie rozwinąć.
+            </p>
+          </div>
+        </details>
+      </Card>
+    </section>
   );
 }
 

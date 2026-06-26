@@ -7,6 +7,7 @@ import type { CalculationResult, ClientData } from "@/lib/types";
 
 type OfferPdfButtonProps = {
   client: ClientData;
+  discountCode: string;
   offer: CalculationResult;
   disabled: boolean;
 };
@@ -48,13 +49,24 @@ const escapeHtml = (value: string) =>
 
 const buildReportHtml = ({
   client,
+  discountCode,
   generatedAt,
+  logoUrl,
   offer,
 }: {
   client: ClientData;
+  discountCode: string;
   generatedAt: Date;
+  logoUrl: string;
   offer: CalculationResult;
 }) => {
+  const normalizedDiscountCode = discountCode.trim().toLowerCase();
+  const discountLabel = normalizedDiscountCode
+    ? `${escapeHtml(normalizedDiscountCode)} · ${formatPercent(
+        offer.discountPercent,
+      )}%`
+    : "brak";
+
   const projectRows = offer.selectedProjects
     .map(
       (project) => `
@@ -119,19 +131,23 @@ const buildReportHtml = ({
   return `
     <style>
       * { box-sizing: border-box; }
-      .report {
-        width: 794px;
+      .pdf-root {
         background: #ffffff;
         color: #1c1917;
         font-family: Arial, Helvetica, sans-serif;
-        padding: 48px;
-        line-height: 1.35;
+        width: 794px;
+      }
+      .pdf-page {
+        background: #ffffff;
+        min-height: 1123px;
+        padding: 44px;
+        width: 794px;
       }
       .hero {
         background: #11100f;
         border-radius: 28px;
         color: #ffffff;
-        padding: 40px;
+        padding: 34px;
       }
       .row { display: flex; gap: 24px; align-items: flex-start; }
       .between { justify-content: space-between; align-items: center; }
@@ -147,55 +163,43 @@ const buildReportHtml = ({
       h1 {
         font-size: 34px;
         line-height: 1.08;
-        margin: 20px 0 0;
+        margin: 18px 0 0;
       }
-      h2 {
-        font-size: 18px;
-        margin: 0;
-      }
-      h3 {
-        font-size: 15px;
-        margin: 0;
-      }
-      p {
-        margin: 0;
-      }
+      h2 { font-size: 18px; margin: 0; }
+      h3 { font-size: 15px; margin: 0; }
+      p { margin: 0; }
       .hero-description {
         color: #d7d3cb;
         font-size: 13px;
         line-height: 1.75;
-        margin-top: 16px;
+        margin-top: 14px;
         max-width: 430px;
       }
       .logo-box {
-        border: 1px solid rgba(255,255,255,0.16);
+        background: #ffffff;
         border-radius: 18px;
-        min-width: 180px;
-        padding: 20px;
+        min-width: 175px;
+        padding: 16px;
         text-align: right;
       }
-      .logo-label {
-        color: #bdb7ae;
-        font-size: 11px;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-      }
-      .logo-name {
-        font-size: 18px;
-        font-weight: 700;
-        margin-top: 12px;
+      .logo-box img {
+        display: block;
+        margin-left: auto;
+        max-height: 58px;
+        max-width: 150px;
+        object-fit: contain;
       }
       .cards {
         display: grid;
-        gap: 16px;
+        gap: 14px;
         grid-template-columns: repeat(3, 1fr);
-        margin-top: 32px;
+        margin-top: 26px;
       }
       .info-card {
         background: #fbf8f2;
         border: 1px solid #e7dfd2;
         border-radius: 20px;
-        padding: 20px;
+        padding: 18px;
       }
       .info-card.dark {
         background: #11100f;
@@ -210,21 +214,21 @@ const buildReportHtml = ({
       }
       .info-card.dark .label { color: #d6b36e; }
       .value {
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 700;
-        margin-top: 12px;
+        margin-top: 10px;
       }
       .section {
         border: 1px solid #e7dfd2;
         border-radius: 24px;
-        margin-top: 32px;
-        padding: 28px;
+        margin-top: 26px;
+        padding: 24px;
       }
       .data-grid {
         display: grid;
         gap: 16px;
         grid-template-columns: repeat(3, 1fr);
-        margin-top: 20px;
+        margin-top: 18px;
       }
       .data-value {
         font-size: 13px;
@@ -234,7 +238,7 @@ const buildReportHtml = ({
       table {
         border-collapse: collapse;
         font-size: 13px;
-        margin-top: 20px;
+        margin-top: 18px;
         width: 100%;
       }
       th {
@@ -242,27 +246,27 @@ const buildReportHtml = ({
         color: #7a7166;
         font-size: 11px;
         letter-spacing: 0.16em;
-        padding: 12px 0;
+        padding: 11px 0;
         text-align: left;
         text-transform: uppercase;
       }
       td {
         border-bottom: 1px solid #f0ebe3;
-        padding: 15px 0;
+        padding: 14px 0;
       }
       .right { text-align: right; }
       .installment-card {
         background: #f8f3ea;
         border-radius: 18px;
-        margin-top: 20px;
-        padding: 20px;
+        margin-top: 18px;
+        padding: 18px;
       }
       .gold { color: #85622b; }
       .installment-grid {
         display: grid;
-        gap: 12px;
+        gap: 10px;
         grid-template-columns: repeat(2, 1fr);
-        margin-top: 16px;
+        margin-top: 14px;
       }
       .installment {
         background: #ffffff;
@@ -270,14 +274,14 @@ const buildReportHtml = ({
         display: flex;
         font-size: 12px;
         justify-content: space-between;
-        padding: 12px 14px;
+        padding: 11px 13px;
       }
       .dark-section {
         background: #11100f;
         border-radius: 24px;
         color: #ffffff;
-        margin-top: 32px;
-        padding: 28px;
+        margin-top: 24px;
+        padding: 24px;
       }
       .dark-installment {
         border: 1px solid rgba(255,255,255,0.12);
@@ -285,7 +289,7 @@ const buildReportHtml = ({
         display: flex;
         font-size: 12px;
         justify-content: space-between;
-        padding: 12px 14px;
+        padding: 11px 13px;
       }
       .dark-installment span { color: #d7d3cb; }
       .footer {
@@ -295,125 +299,133 @@ const buildReportHtml = ({
         color: #5f574f;
         font-size: 12px;
         line-height: 1.75;
-        margin-top: 32px;
-        padding: 28px;
+        margin-top: 24px;
+        padding: 24px;
       }
-      .footer strong {
-        color: #1c1917;
-      }
+      .footer strong { color: #1c1917; }
     </style>
-    <article class="report">
-      <header class="hero">
-        <div class="row between">
-          <div class="hero-copy">
-            <p class="eyebrow">Raport wyceny</p>
-            <h1>Wycena projektu wnętrz</h1>
-            <p class="hero-description">
-              Profesjonalne podsumowanie oferty przygotowane automatycznie na podstawie wybranych parametrów projektu.
-            </p>
-          </div>
-          <div class="logo-box">
-            <p class="logo-label">Miejsce na logo</p>
-            <p class="logo-name">Nazwa firmy</p>
-          </div>
-        </div>
-      </header>
 
-      <section class="cards">
-        <div class="info-card">
-          <p class="label">Data wygenerowania</p>
-          <p class="value">${formatDate(generatedAt)}</p>
-        </div>
-        <div class="info-card">
-          <p class="label">Godzina wygenerowania</p>
-          <p class="value">${formatTime(generatedAt)}</p>
-        </div>
-        <div class="info-card dark">
-          <p class="label">Cena końcowa</p>
-          <p class="value">${formatCurrency(offer.finalPrice)}</p>
-        </div>
+    <article class="pdf-root">
+      <section class="pdf-page">
+        <header class="hero">
+          <div class="row between">
+            <div class="hero-copy">
+              <p class="eyebrow">Raport wyceny</p>
+              <h1>Wycena projektu wnętrz</h1>
+              <p class="hero-description">
+                Profesjonalne podsumowanie oferty przygotowane automatycznie na podstawie wybranych parametrów projektu.
+              </p>
+            </div>
+            <div class="logo-box">
+              <img src="${logoUrl}" alt="Ossgaleria" />
+            </div>
+          </div>
+        </header>
+
+        <section class="cards">
+          <div class="info-card">
+            <p class="label">Data wygenerowania</p>
+            <p class="value">${formatDate(generatedAt)}</p>
+          </div>
+          <div class="info-card">
+            <p class="label">Godzina wygenerowania</p>
+            <p class="value">${formatTime(generatedAt)}</p>
+          </div>
+          <div class="info-card dark">
+            <p class="label">Cena końcowa</p>
+            <p class="value">${formatCurrency(offer.finalPrice)}</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Dane klienta</h2>
+          <div class="data-grid">
+            <div>
+              <p class="label">Imię i nazwisko</p>
+              <p class="data-value">${escapeHtml(client.name)}</p>
+            </div>
+            <div>
+              <p class="label">E-mail</p>
+              <p class="data-value">${escapeHtml(client.email)}</p>
+            </div>
+            <div>
+              <p class="label">Telefon</p>
+              <p class="data-value">${escapeHtml(client.phone)}</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Zakres i stawki</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Typ projektu</th>
+                <th class="right">Metraż</th>
+                <th class="right">Stawka / m²</th>
+                <th class="right">Wartość</th>
+              </tr>
+            </thead>
+            <tbody>${projectRows}</tbody>
+          </table>
+        </section>
+
+        <section class="cards">
+          <div class="info-card">
+            <p class="label">Cena bazowa</p>
+            <p class="value">${formatCurrency(offer.basePrice)}</p>
+          </div>
+          <div class="info-card">
+            <p class="label">Kod rabatowy</p>
+            <p class="value">${discountLabel}</p>
+          </div>
+          <div class="info-card dark">
+            <p class="label">Cena po rabacie</p>
+            <p class="value">${formatCurrency(offer.finalPrice)}</p>
+          </div>
+        </section>
       </section>
 
-      <section class="section">
-        <h2>Dane klienta</h2>
-        <div class="data-grid">
-          <div>
-            <p class="label">Imię i nazwisko</p>
-            <p class="data-value">${escapeHtml(client.name)}</p>
-          </div>
-          <div>
-            <p class="label">E-mail</p>
-            <p class="data-value">${escapeHtml(client.email)}</p>
-          </div>
-          <div>
-            <p class="label">Telefon</p>
-            <p class="data-value">${escapeHtml(client.phone)}</p>
-          </div>
-        </div>
+      <section class="pdf-page">
+        <section class="section" style="margin-top: 0;">
+          <h2>Harmonogram płatności</h2>
+          ${projectInstallments}
+        </section>
+
+        ${totalInstallments}
+
+        <footer class="footer">
+          <p>
+            Oferta została wygenerowana automatycznie na podstawie wybranych parametrów.
+            Wycena ma charakter informacyjny i może zostać doprecyzowana po analizie szczegółowego zakresu projektu.
+          </p>
+          <p style="margin-top: 16px;">
+            <strong>Wygenerowano: ${formatDateTime(generatedAt)}</strong>
+          </p>
+        </footer>
       </section>
-
-      <section class="section">
-        <h2>Zakres i stawki</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Typ projektu</th>
-              <th class="right">Metraż</th>
-              <th class="right">Stawka / m²</th>
-              <th class="right">Wartość</th>
-            </tr>
-          </thead>
-          <tbody>${projectRows}</tbody>
-        </table>
-      </section>
-
-      <section class="cards">
-        <div class="info-card">
-          <p class="label">Cena bazowa</p>
-          <p class="value">${formatCurrency(offer.basePrice)}</p>
-        </div>
-        <div class="info-card">
-          <p class="label">Rabat</p>
-          <p class="value">${formatPercent(offer.discountPercent)}% (${formatCurrency(
-            offer.discountAmount,
-          )})</p>
-        </div>
-        <div class="info-card dark">
-          <p class="label">Cena po rabacie</p>
-          <p class="value">${formatCurrency(offer.finalPrice)}</p>
-        </div>
-      </section>
-
-      <section class="section">
-        <h2>Harmonogram płatności</h2>
-        ${projectInstallments}
-      </section>
-
-      ${totalInstallments}
-
-      <footer class="footer">
-        <p>
-          Oferta została wygenerowana automatycznie na podstawie wybranych parametrów.
-          Wycena ma charakter informacyjny i może zostać doprecyzowana po analizie szczegółowego zakresu projektu.
-        </p>
-        <p style="margin-top: 16px;">
-          <strong>Wygenerowano: ${formatDateTime(generatedAt)}</strong>
-        </p>
-      </footer>
     </article>
   `;
 };
 
 export function OfferPdfButton({
   client,
+  discountCode,
   offer,
   disabled,
 }: OfferPdfButtonProps) {
   const handleDownload = async () => {
     const reportElement = document.createElement("div");
     const generatedAt = new Date();
+    const logoUrl = `${window.location.origin}/ossgaleria-logo.jpg`;
 
-    reportElement.innerHTML = buildReportHtml({ client, generatedAt, offer });
+    reportElement.innerHTML = buildReportHtml({
+      client,
+      discountCode,
+      generatedAt,
+      logoUrl,
+      offer,
+    });
     reportElement.style.background = "#ffffff";
     reportElement.style.left = "0";
     reportElement.style.pointerEvents = "none";
@@ -426,19 +438,9 @@ export function OfferPdfButton({
     try {
       const html2canvas = (await import("html2canvas")).default;
       const { jsPDF } = await import("jspdf");
-      const report = reportElement.querySelector(".report") as HTMLElement | null;
-
-      if (!report) {
-        return;
-      }
-
-      const canvas = await html2canvas(report, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-        useCORS: true,
-        windowWidth: 794,
-      });
-
+      const pages = Array.from(
+        reportElement.querySelectorAll<HTMLElement>(".pdf-page"),
+      );
       const doc = new jsPDF({
         format: "a4",
         orientation: "portrait",
@@ -446,49 +448,27 @@ export function OfferPdfButton({
       });
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-      const sourcePageHeight = Math.floor((pageHeight * canvas.width) / pageWidth);
-      const pageCanvas = document.createElement("canvas");
-      const pageContext = pageCanvas.getContext("2d");
-      let sourceY = 0;
-      let pageIndex = 0;
 
-      if (!pageContext) {
-        return;
-      }
-
-      pageCanvas.width = canvas.width;
-
-      while (sourceY < canvas.height) {
-        const sliceHeight = Math.min(sourcePageHeight, canvas.height - sourceY);
-        pageCanvas.height = sliceHeight;
-        pageContext.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
-        pageContext.drawImage(
-          canvas,
-          0,
-          sourceY,
-          canvas.width,
-          sliceHeight,
-          0,
-          0,
-          canvas.width,
-          sliceHeight,
-        );
+      for (const [pageIndex, page] of pages.entries()) {
+        const canvas = await html2canvas(page, {
+          backgroundColor: "#ffffff",
+          scale: 2,
+          useCORS: true,
+          windowWidth: 794,
+        });
 
         if (pageIndex > 0) {
           doc.addPage();
         }
 
         doc.addImage(
-          pageCanvas.toDataURL("image/png"),
+          canvas.toDataURL("image/png"),
           "PNG",
           0,
           0,
           pageWidth,
-          (sliceHeight * pageWidth) / canvas.width,
+          pageHeight,
         );
-
-        sourceY += sliceHeight;
-        pageIndex += 1;
       }
 
       doc.save(
